@@ -1,22 +1,12 @@
-package eu.acme.demo.web.dto;
+package eu.acme.demo.web.request;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
-public class OrderItemDto {
-    private UUID itemId;
+public class OrderItemsRequested {
+
     private int units;
     private BigDecimal unitPrice;
     private BigDecimal totalPrice;
-    private OrderDto order;
-
-    public UUID getItemId() {
-        return itemId;
-    }
-
-    public void setItemId(UUID itemId) {
-        this.itemId = itemId;
-    }
 
     public int getUnits() {
         return units;
@@ -40,13 +30,5 @@ public class OrderItemDto {
 
     public void setTotalPrice(BigDecimal totalPrice) {
         this.totalPrice = totalPrice;
-    }
-
-    public OrderDto getOrder() {
-        return order;
-    }
-
-    public void setOrder(OrderDto order) {
-        this.order = order;
     }
 }

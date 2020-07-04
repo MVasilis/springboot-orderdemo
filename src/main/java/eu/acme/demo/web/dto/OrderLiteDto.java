@@ -13,7 +13,7 @@ public class OrderLiteDto {
      * reference code used by client system to track order
      */
     private String clientReferenceCode;
-    private BigDecimal totalAmount;
+    private BigDecimal itemTotalAmount;
     private int itemCount;
 
     public UUID getId() {
@@ -40,12 +40,12 @@ public class OrderLiteDto {
         this.clientReferenceCode = clientReferenceCode;
     }
 
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
+    public BigDecimal getItemTotalAmount() {
+        return itemTotalAmount;
     }
 
-    public void setTotalAmount(BigDecimal totalAmount) {
-        this.totalAmount = totalAmount;
+    public void setItemTotalAmount(BigDecimal itemTotalAmount) {
+        this.itemTotalAmount = itemTotalAmount;
     }
 
     public int getItemCount() {

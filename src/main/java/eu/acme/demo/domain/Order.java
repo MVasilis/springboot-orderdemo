@@ -4,6 +4,7 @@ import eu.acme.demo.domain.enums.OrderStatus;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -24,6 +25,9 @@ public class Order extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
     private OrderStatus status;
+
+    @OneToMany(mappedBy="order", cascade = CascadeType.ALL)
+    private List<OrderItem> orderItems;
 
     public String getClientReferenceCode() {
         return clientReferenceCode;
@@ -63,5 +67,13 @@ public class Order extends AuditableEntity {
 
     public void setStatus(OrderStatus status) {
         this.status = status;
+    }
+
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
+    }
+
+    public void setOrderItems(List<OrderItem> orderItems) {
+        this.orderItems = orderItems;
     }
 }
