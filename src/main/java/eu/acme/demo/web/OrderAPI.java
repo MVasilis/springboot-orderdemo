@@ -45,15 +45,9 @@ public class OrderAPI {
 
     @PostMapping
     public OrderDto submitOrder(@RequestBody OrderRequest orderRequest) {
-
-        //OrderDto orderDto = new OrderDto();
-        //BeanUtils.copyProperties(orderRequest,orderDto);
         // Deep object mapping
         ModelMapper modelMapper = new ModelMapper();
         OrderDto orderDto = modelMapper.map(orderRequest, OrderDto.class);
-
-
-
 
         //TODO: submit a new order
         // if client reference code already exist then return an HTTP 400 (bad request) with a proper payload that contains an error code and an error message

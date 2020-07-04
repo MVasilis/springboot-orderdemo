@@ -25,24 +25,17 @@ public class OrderService {
 
     public OrderDto saveorUpdate(OrderDto orderDto){
         // TODO Add try catch
-        //Order order = new Order();
-        //BeanUtils.copyProperties(orderDto, order);
-
         for(int i = 0; i < orderDto.getOrderItems().size(); i++){
             OrderItemDto orderItemDto = orderDto.getOrderItems().get(i);
             orderItemDto.setOrder(orderDto);
             orderDto.getOrderItems().set(i, orderItemDto);
         }
-
-
         ModelMapper modelMapper = new ModelMapper();
         Order order = modelMapper.map(orderDto, Order.class);
         order.setStatus(OrderStatus.SUBMITTED);
 
-
         orderRepository.save(order);
         OrderDto returnValue = modelMapper.map(order, OrderDto.class);
-
         return returnValue;
     }
 
