@@ -1,4 +1,4 @@
-# Getting Started
+# Getting Started - By Vasilis Martos
 
 This is demo project to evaluate Java Developer proficiency in Spring Boot.  
 
