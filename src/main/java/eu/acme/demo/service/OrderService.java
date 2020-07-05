@@ -47,4 +47,8 @@ public class OrderService {
         return orderRepository.findAll();
     };
 
+    public Order getOrderByClientRefCode(String clientReferenceCode){
+        return orderRepository.findByClientReferenceCode(clientReferenceCode);
+    }
+
 }

@@ -7,5 +7,5 @@ import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
 
-
+    Order findByClientReferenceCode(String clientReferenceCode);
 }
