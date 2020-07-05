@@ -26,7 +26,7 @@ public class Order extends AuditableEntity {
     @Column(name = "status", length = 20, nullable = false)
     private OrderStatus status;
 
-    @OneToMany(mappedBy="order", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy="order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderItem> orderItems;
 
     public String getClientReferenceCode() {
