@@ -82,14 +82,6 @@ public class OrderDataTests {
         Assert.isTrue(orderItemRepository.findByOrderId(order.getId()).size() == 3, "Different size of OrderItems List");
     }
 
-/*
-    private List<OrderItem> orderItems(Order order){
-
-        orderItems.add(newOrderItem(order));
-        return orderItems;
-
-    }
-    */
     private OrderItem newOrderItem(Order order){
         OrderItem orderItem = new OrderItem();
         orderItem.setTotalPrice(BigDecimal.valueOf(11.12));
