@@ -1,6 +1,8 @@
 package eu.acme.demo.web;
 
+import eu.acme.demo.service.CustomerService;
 import eu.acme.demo.service.OrderService;
+import eu.acme.demo.web.dto.CustomerDto;
 import eu.acme.demo.web.dto.OrderDto;
 import eu.acme.demo.web.dto.OrderLiteDto;
 import eu.acme.demo.web.request.OrderRequest;
@@ -26,13 +28,17 @@ public class OrderAPI {
 
     private static final String REF_CODE_ALREADY_EXISTS = "reference code already exists";
     private static final String ORDER_DOES_NOT_EXISTS = "Order does not exists, Please chect you order id";
+    private static final String NO_CUSTEMER = "Please register first";
 
     private OrderService orderService;
 
+    private CustomerService customerService;
+
 
     @Autowired
-    public OrderAPI(OrderService orderService) {
+    public OrderAPI(OrderService orderService, CustomerService customerService) {
         this.orderService = orderService;
+        this.customerService = customerService;
     }
 
     @GetMapping
@@ -50,11 +56,18 @@ public class OrderAPI {
         return new ResponseEntity<OrderResponse>(getOrderResponse(orderDto), HttpStatus.OK);
     }
 
-    @PostMapping
-    public ResponseEntity<?> submitOrder(@RequestBody OrderRequest orderRequest) {
+    @PostMapping("/{customerId}")
+    public ResponseEntity<?> submitOrder(@PathVariable UUID customerId,
+                                         @RequestBody OrderRequest orderRequest) {
+        // Verify that customer Exists
+        CustomerDto customerDto = customerService.findCustomerById(customerId);
+        if(ObjectUtils.isEmpty(customerDto))
+            return new ResponseEntity<ErrorResponse>(getErrorResponse(NO_CUSTEMER), HttpStatus.BAD_REQUEST);
+
         //Deep object mapping
         ModelMapper modelMapper = new ModelMapper();
         OrderDto orderDto = modelMapper.map(orderRequest, OrderDto.class);
+        orderDto.setCustomerDto(customerDto);
         if (clientRefCodeAlreadyExists(orderRequest.getClientReferenceCode())){
             return new ResponseEntity<ErrorResponse>(getErrorResponse(REF_CODE_ALREADY_EXISTS), HttpStatus.BAD_REQUEST);
         }

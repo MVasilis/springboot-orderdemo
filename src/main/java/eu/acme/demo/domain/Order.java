@@ -29,6 +29,10 @@ public class Order extends AuditableEntity {
     @OneToMany(mappedBy="order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderItem> orderItems;
 
+    @ManyToOne
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer  customer;
+
     public String getClientReferenceCode() {
         return clientReferenceCode;
     }
@@ -75,5 +79,13 @@ public class Order extends AuditableEntity {
 
     public void setOrderItems(List<OrderItem> orderItems) {
         this.orderItems = orderItems;
+    }
+
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
     }
 }

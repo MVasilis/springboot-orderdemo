@@ -1,9 +1,12 @@
 package eu.acme.demo;
 
 
+import eu.acme.demo.domain.Customer;
 import eu.acme.demo.domain.Order;
 import eu.acme.demo.domain.OrderItem;
+import eu.acme.demo.domain.enums.CustomerGender;
 import eu.acme.demo.domain.enums.OrderStatus;
+import eu.acme.demo.repository.CustomerRepository;
 import eu.acme.demo.repository.OrderItemRepository;
 import eu.acme.demo.repository.OrderRepository;
 import org.junit.jupiter.api.Test;
@@ -23,6 +26,8 @@ public class OrderDataTests {
     private OrderRepository orderRepository;
     @Autowired
     private OrderItemRepository orderItemRepository;
+    @Autowired
+    private CustomerRepository customerRepository;
 
     @Test
     public void testCreateOrder() {
@@ -32,6 +37,7 @@ public class OrderDataTests {
         o.setDescription("first order");
         o.setItemCount(10);
         o.setItemTotalAmount(BigDecimal.valueOf(100.23));
+        o.setCustomer(customer(o));
         orderRepository.save(o);
 
         Assert.isTrue(orderRepository.findById(o.getId()).isPresent(), "order not found");
@@ -51,6 +57,7 @@ public class OrderDataTests {
         OrderItem firstOrderItem = newOrderItem(order);
         orderItems.add(firstOrderItem);
         order.setOrderItems(orderItems);
+        order.setCustomer(customer(order));
         // Save Objects in DB
         orderRepository.save(order);
         // Retreive OrderItem via Order ID
@@ -75,6 +82,7 @@ public class OrderDataTests {
         OrderItem thirdOrderItem = newOrderItem(order);
         orderItems.add(thirdOrderItem);
         order.setOrderItems(orderItems);
+        order.setCustomer(customer(order));
         // Save Objects in DB
         orderRepository.save(order);
         // Retreive OrderItem via Order ID
@@ -89,6 +97,19 @@ public class OrderDataTests {
         orderItem.setUnits(1);
         orderItem.setOrder(order);
         return orderItem;
+    }
+
+    private Customer customer(Order order){
+        Customer customer = new Customer();
+        customer.setFirstName("Nikolaos");
+        customer.setLastName("Nikolaou");
+        customer.setCustomerGender(CustomerGender.MALE);
+        customer.setAddress("Acharnon");
+        List<Order> orders = new ArrayList<>();
+        orders.add(order);
+        //Save customer in DB
+        customerRepository.save(customer);
+        return customer;
     }
 
 }

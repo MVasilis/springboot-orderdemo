@@ -1,6 +1,7 @@
 package eu.acme.demo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.acme.demo.web.dto.CustomerDto;
 import eu.acme.demo.web.dto.OrderDto;
 import eu.acme.demo.web.response.ErrorResponse;
 import net.minidev.json.JSONArray;
@@ -8,6 +9,7 @@ import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
@@ -29,9 +31,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class OrderAPITests {
 
-    private final static String SUBMIT_ORDER_URL = "http://localhost:9090/orders";
-    private final static String GET_ORDER_BY_ID_URL = "http://localhost:9090/orders/";
-    private final static String GET_ALL_ORDERS_URL = "http://localhost:9090/orders";
+    private final static String SERVER_URL = "http://localhost:";
+    private final static String ORDER_METHOD = "/orders";
+    private final static String CUSTOMER_METHOD = "/customers";
+
 
     @Autowired
     private MockMvc mockMvc;
@@ -39,17 +42,19 @@ class OrderAPITests {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Value("${server.port}")
+    private String port;
+
+
     @Test
     @Transactional
     void testOrderAPI() throws Exception {
+        // Create Customer
+        CustomerDto customerDto = createCustomer();
         String testReferenceCode = "code12432145423";
-        // Submit API request
-        MvcResult orderResult = postResquestResult(orderRequestAsString(testReferenceCode), status().isOk());
-        // Retreive response
-        String response = orderResult.getResponse().getContentAsString();
-        OrderDto orderDto = objectMapper.readValue(response, OrderDto.class);
+        // Create Order
+        OrderDto orderDto = createOrder(testReferenceCode, customerDto.getId());
         // Verify Data
-        Assert.notNull(orderResult.getResponse().getContentAsString());
         Assert.isTrue(orderDto.getOrderItems().size() == 1, "Wrong OrderItems size");
         Assert.isTrue(orderDto.getClientReferenceCode().equals(testReferenceCode), "Wrong Client reference code");
         Assert.isTrue(orderDto.getItemTotalAmount().compareTo(new BigDecimal(200))== 0 , "Wrong Item Total Amount");
@@ -59,10 +64,11 @@ class OrderAPITests {
     @Test
     @Transactional
     void testOrderDoubleSubmission() throws Exception {
+        CustomerDto customerDto = createCustomer();
         String testReferenceCode = "code1234567";
         // Submit API request
-        postResquestResult(orderRequestAsString(testReferenceCode), status().isOk());
-        MvcResult seconsSameOrderResult = postResquestResult(orderRequestAsString(testReferenceCode), status().is4xxClientError());
+        postResquestResult(orderRequestAsString(testReferenceCode), status().isOk(), customerDto.getId());
+        MvcResult seconsSameOrderResult = postResquestResult(orderRequestAsString(testReferenceCode), status().is4xxClientError(), customerDto.getId());
         // Retreive response
         String response = seconsSameOrderResult.getResponse().getContentAsString();
         // Verify Data
@@ -73,11 +79,13 @@ class OrderAPITests {
     @Test
     @Transactional
     void testFetchAllOrders() throws Exception{
+        // Create Customer
+        CustomerDto customerDto = createCustomer();
         String firstTestReferenceCode = "code123";
         String secondTestReferenceCode = "code12345";
         // submit objects to db
-        postResquestResult(orderRequestAsString(firstTestReferenceCode), status().isOk());
-        postResquestResult(orderRequestAsString(secondTestReferenceCode), status().isOk());
+        createOrder(firstTestReferenceCode, customerDto.getId());
+        createOrder(secondTestReferenceCode, customerDto.getId());
         // get object
         MvcResult orderResult = getAllOrders();
         String response = orderResult.getResponse().getContentAsString();
@@ -91,11 +99,11 @@ class OrderAPITests {
     @Test
     @Transactional
     void testFetchCertainOrder() throws Exception{
+        // Create Customer
+        CustomerDto customerDto = createCustomer();
         String testReferenceCode = "code123456";
         // submit requets
-        MvcResult firstOrderResult = postResquestResult(orderRequestAsString(testReferenceCode), status().isOk());
-        String response = firstOrderResult.getResponse().getContentAsString();
-        OrderDto savedOrderDto = objectMapper.readValue(response, OrderDto.class);
+        OrderDto savedOrderDto = createOrder(testReferenceCode, customerDto.getId());
         MvcResult getResult = getOrder(savedOrderDto.getId(), status().isOk());
         String getResponse = getResult.getResponse().getContentAsString();
         OrderDto getOrder = objectMapper.readValue(getResponse, OrderDto.class);
@@ -108,8 +116,8 @@ class OrderAPITests {
         Assert.isTrue(errorResponse.getErrorCode().equals("400"), "Wrong error response");
     }
 
-    private MvcResult postResquestResult(String request, ResultMatcher statusResult) throws Exception{
-        MvcResult secondOrderResult = this.mockMvc.perform(post(SUBMIT_ORDER_URL).
+    private MvcResult postResquestResult(String request, ResultMatcher statusResult, UUID customerId) throws Exception{
+        MvcResult secondOrderResult = this.mockMvc.perform(post(SERVER_URL + port + ORDER_METHOD + "/" + customerId).
                 content(request)
                 .contentType("application/json")
                 .accept("application/json"))
@@ -119,7 +127,7 @@ class OrderAPITests {
     }
 
     private MvcResult getOrder(UUID orderId, ResultMatcher statusResult) throws Exception{
-        MvcResult getResult = this.mockMvc.perform(MockMvcRequestBuilders.get(GET_ORDER_BY_ID_URL + orderId)
+        MvcResult getResult = this.mockMvc.perform(MockMvcRequestBuilders.get(SERVER_URL + port + ORDER_METHOD + "/" + orderId)
                 .contentType("application/json")
                 .accept("application/json"))
                 .andExpect(statusResult)
@@ -128,12 +136,38 @@ class OrderAPITests {
     }
 
     private MvcResult getAllOrders() throws Exception{
-        MvcResult OrderResult = this.mockMvc.perform(MockMvcRequestBuilders.get(GET_ALL_ORDERS_URL)
+        MvcResult OrderResult = this.mockMvc.perform(MockMvcRequestBuilders.get(SERVER_URL + port + ORDER_METHOD)
                 .contentType("application/json")
                 .accept("application/json"))
                 .andExpect(status().isOk())
                 .andReturn();
         return OrderResult;
+    }
+
+    private MvcResult postCustomerResult(String request, ResultMatcher statusResult) throws Exception{
+        MvcResult secondOrderResult = this.mockMvc.perform(post(SERVER_URL + port + CUSTOMER_METHOD).
+                content(request)
+                .contentType("application/json")
+                .accept("application/json"))
+                .andExpect(statusResult)
+                .andReturn();
+        return secondOrderResult;
+    }
+
+    private CustomerDto createCustomer() throws Exception{
+        // Create Customer
+        MvcResult customerResult = postCustomerResult(customerRequestAsString(), status().isOk());
+        String customerResponse = customerResult.getResponse().getContentAsString();
+        return objectMapper.readValue(customerResponse, CustomerDto.class);
+    }
+
+    private OrderDto createOrder(String referenceCode, UUID customerId) throws Exception{
+        MvcResult orderResult = postResquestResult(orderRequestAsString(referenceCode), status().isOk(), customerId);
+        // Retreive response
+        String response = orderResult.getResponse().getContentAsString();
+        OrderDto orderDto = objectMapper.readValue(response, OrderDto.class);
+        Assert.notNull(orderResult.getResponse().getContentAsString());
+        return orderDto;
     }
 
     private String orderRequestAsString(String referenceCode){
@@ -150,6 +184,16 @@ class OrderAPITests {
         orderItemsObjects.add(orderItemsObject);
         orderObject.put("orderItems", orderItemsObjects);
         return orderObject.toString();
+    }
+
+
+    private String customerRequestAsString(){
+        JSONObject customerObject = new JSONObject();
+        customerObject.put("firstName", "Nick");
+        customerObject.put("lastName", "Papadopoulos");
+        customerObject.put("customerGender", "MALE");
+        customerObject.put("address", "Tertipi 24");
+        return customerObject.toString();
     }
 }
 
