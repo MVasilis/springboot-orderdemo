@@ -2,8 +2,11 @@ package eu.acme.demo.web.response;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 public class OrderResponse {
+
+    private UUID id;
 
     private String clientReferenceCode;
 
@@ -15,6 +18,14 @@ public class OrderResponse {
 
     private List<OrderItemResponse> orderItems;
 
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
 
     public String getClientReferenceCode() {
         return clientReferenceCode;

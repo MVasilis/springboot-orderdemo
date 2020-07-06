@@ -1,12 +1,23 @@
 package eu.acme.demo.web.response;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 public class OrderItemResponse {
 
+    private UUID itemId;
     private int units;
     private BigDecimal unitPrice;
     private BigDecimal totalPrice;
+
+
+    public UUID getItemId() {
+        return itemId;
+    }
+
+    public void setItemId(UUID itemId) {
+        this.itemId = itemId;
+    }
 
     public int getUnits() {
         return units;
